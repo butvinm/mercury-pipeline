@@ -3,13 +3,13 @@ package butvinm.mercury.pipeline.config;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import butvinm.mercury.pipeline.config.utils.TestPluginConfig1;
 import butvinm.mercury.pipeline.config.utils.TestPluginConfig2;
@@ -28,24 +28,22 @@ public class ConfigReaderTest {
         configReader = new ConfigReader(plugins);
     }
 
-    private static Stream<Arguments> getValidConfigFiles() {
+    private static Stream<Arguments> getValidConfigFiles() throws IOException {
         return Stream.of(
-            Arguments.of("test-config1.yml", 1),
-            Arguments.of("test-config2.yml", 1),
-            Arguments.of("test-config3.yml", 2),
-            Arguments.of("test-config4.yml", 0)
+            Arguments.of(getResourceContent("test-config1.yml"), 1),
+            Arguments.of(getResourceContent("test-config2.yml"), 1),
+            Arguments.of(getResourceContent("test-config3.yml"), 2),
+            Arguments.of(getResourceContent("test-config4.yml"), 0)
         );
     }
 
     @ParameterizedTest
     @MethodSource("getValidConfigFiles")
     public void testParseValidConfigFiles(
-        String configResource,
+        String configContent,
         Integer expectedPluginsCount
     ) {
-        var result = configReader.parseConfig(
-            this.getResourcePath(configResource)
-        );
+        var result = configReader.parseConfig(configContent);
         assertTrue(result.isSuccess());
 
         PipelineConfig pipelineConfig = result.get();
@@ -53,18 +51,26 @@ public class ConfigReaderTest {
             pipelineConfig.getPlugins().length());
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"invalid-config.yml"})
-    public void testParseInvalidConfigFile(String configFileResource) {
-        // Parse the config file
-        var result = configReader.parseConfig(
-            this.getResourcePath(configFileResource)
+    private static Stream<Arguments> getInvalidConfigFiles()
+        throws IOException {
+        return Stream.of(
+            Arguments.of(getResourceContent("invalid-config.yml"))
         );
+    }
+
+    @ParameterizedTest
+    @MethodSource("getInvalidConfigFiles")
+    public void testParseInvalidConfigFile(String configContent) {
+        var result = configReader.parseConfig(configContent);
         assertTrue(result.isFailure());
         assertTrue(result.getCause() instanceof IOException);
     }
 
-    private Path getResourcePath(String resourceName) {
-        return Path.of(getClass().getResource(resourceName).getPath());
+    private static String getResourceContent(String resourceName)
+        throws IOException {
+        var resourcePath = Path.of(
+            ConfigReaderTest.class.getResource(resourceName).getPath()
+        );
+        return Files.readString(resourcePath);
     }
 }

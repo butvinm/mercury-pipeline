@@ -1,7 +1,5 @@
 package butvinm.mercury.pipeline.config;
 
-import java.nio.file.Path;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.SubtypeResolver;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -12,7 +10,7 @@ import io.vavr.control.Try;
 /**
  * Config reader.
  *
- * Read {@link PipelinConfig} from YAML file.
+ * Parse {@link PipelinConfig} from YAML file.
  */
 public class ConfigReader {
     /** Jackson object mapper. */
@@ -28,14 +26,15 @@ public class ConfigReader {
     }
 
     /**
-     * Read pipeline config from YAML and map to {@link PipelineConfig}.
+     * Parse pipeline config from content of YAML file and map to
+     * {@link PipelineConfig}.
      *
-     * @param configPath Path to YAML file with config.
+     * @param configContent Content of YAML file with config.
      * @return PipelineConfig instance or an error.
      */
-    public Try<PipelineConfig> parseConfig(Path configPath) {
+    public Try<PipelineConfig> parseConfig(String configContent) {
         return Try.of(() -> this.mapper.readValue(
-            configPath.toFile(),
+            configContent,
             PipelineConfig.class
         ));
     }
