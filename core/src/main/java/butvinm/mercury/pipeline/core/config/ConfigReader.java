@@ -1,4 +1,4 @@
-package butvinm.mercury.pipeline.config;
+package butvinm.mercury.pipeline.core.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.SubtypeResolver;
@@ -10,7 +10,7 @@ import io.vavr.control.Try;
 /**
  * Config reader.
  *
- * Parse {@link PipelinConfig} from YAML file.
+ * Parswe {@link PipelinConfig} from YAML file.
  */
 public class ConfigReader {
     /** Jackson object mapper. */

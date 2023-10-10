@@ -1,4 +1,4 @@
-package butvinm.mercury.pipeline.config;
+package butvinm.mercury.pipeline.core.config;
 
 import io.vavr.collection.List;
 import lombok.Builder;

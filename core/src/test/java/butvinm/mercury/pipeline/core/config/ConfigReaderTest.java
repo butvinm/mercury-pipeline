@@ -1,4 +1,4 @@
-package butvinm.mercury.pipeline.config;
+package butvinm.mercury.pipeline.core.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,8 +11,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import butvinm.mercury.pipeline.config.utils.TestPluginConfig1;
-import butvinm.mercury.pipeline.config.utils.TestPluginConfig2;
+import butvinm.mercury.pipeline.core.config.utils.TestPluginConfig1;
+import butvinm.mercury.pipeline.core.config.utils.TestPluginConfig2;
 import io.vavr.collection.List;
 import io.vavr.collection.Stream;
 

@@ -1,4 +1,4 @@
-package butvinm.mercury.pipeline.config;
+package butvinm.mercury.pipeline.core.config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 

@@ -1,6 +1,6 @@
-package butvinm.mercury.pipeline.config.utils;
+package butvinm.mercury.pipeline.core.config.utils;
 
-import butvinm.mercury.pipeline.config.PluginConfig;
+import butvinm.mercury.pipeline.core.config.PluginConfig;
 import io.vavr.collection.List;
 import io.vavr.collection.Map;
 import lombok.Builder;
