@@ -1,3 +1,6 @@
 package butvinm.mercury.pipeline.core.events;
 
-public abstract class Event {}
+/**
+ * Basic pipeline event.
+ */
+public interface Event {}
