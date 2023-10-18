@@ -7,5 +7,5 @@ import io.vavr.control.Option;
  * Handle and parse {@link Event} from environment.
  */
 public interface EventHandler {
-    Option<Event> handlerEvent(Map<String, String> env);
+    Option<Event> handleEvent(Map<String, String> env);
 }
