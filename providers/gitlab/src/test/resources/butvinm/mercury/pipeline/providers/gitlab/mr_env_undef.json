@@ -1,0 +1,4 @@
+{
+    "GITLAB_CI": "true",
+    "CI_PIPELINE_SOURCE": "merge_request"
+}
