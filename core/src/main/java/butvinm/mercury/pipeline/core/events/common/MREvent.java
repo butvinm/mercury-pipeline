@@ -5,6 +5,7 @@ import io.vavr.collection.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.extern.jackson.Jacksonized;
 
 /**
  * MergeRequest event.
@@ -17,6 +18,7 @@ import lombok.NonNull;
  */
 @Data
 @Builder
+@Jacksonized
 public class MREvent implements Event {
     /**
      * The instance-level ID of the merge request. This is a unique ID across
