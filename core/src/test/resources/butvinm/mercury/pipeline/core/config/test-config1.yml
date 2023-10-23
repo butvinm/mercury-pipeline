@@ -1,5 +1,5 @@
 plugins:
-    - name: TestPluginConfig1
+    - name: plugin1
       property1: value1
       property2: 42
       stringList:

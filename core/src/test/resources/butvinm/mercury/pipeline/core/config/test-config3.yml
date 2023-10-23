@@ -1,5 +1,5 @@
 plugins:
-    - name: TestPluginConfig1
+    - name: plugin1
       property1: value1
       property2: 42
       stringList:
@@ -8,7 +8,7 @@ plugins:
       stringToIntMap:
           key1: 1
           key2: 2
-    - name: TestPluginConfig2
+    - name: plugin2
       enabled: true
       doubleValue: 3.14
       integerSet:

@@ -1,5 +1,5 @@
 plugins:
-    - name: TestPluginConfig2
+    - name: plugin2
       enabled: true
       doubleValue: 3.14
       integerSet:
