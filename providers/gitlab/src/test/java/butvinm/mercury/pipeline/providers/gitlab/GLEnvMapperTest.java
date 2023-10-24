@@ -12,8 +12,10 @@ import io.vavr.collection.Stream;
 
 public class GLEnvMapperTest {
     public String toCamelCase(String snakeCaseString) {
-        final var parts = List.of(snakeCaseString.toLowerCase().split("_+"));
-        return parts.headOption().getOrElse("")
+        final var parts = List.of(snakeCaseString.toLowerCase().split("_+"))
+            .filter(s -> !s.isEmpty());
+        return parts
+            .headOption().getOrElse("")
             .concat(
                 parts.drop(1)
                     .map(s -> CharSeq.of(s).capitalize())
@@ -27,7 +29,12 @@ public class GLEnvMapperTest {
             Arguments.of("CONSTANT_VALUE", "constantValue"),
             Arguments.of("long____var", "longVar"),
             Arguments.of("_", ""),
-            Arguments.of("", "")
+            Arguments.of("", ""),
+            Arguments.of("GITLAB_CI", "gitlabCi"),
+            Arguments.of("CI_PIPELINE_SOURCE", "ciPipelineSource"),
+            Arguments.of("CI_MERGE_REQUEST_APPROVED", "ciMergeRequestApproved"),
+            Arguments.of("CI_MERGE_REQUEST_ID", "ciMergeRequestId"),
+            Arguments.of("_REQUEST_IID", "requestIid")
         );
     }
 

@@ -101,8 +101,10 @@ public class GLEnvMapper {
      * @return Field name in camelCase.
      */
     private String toCamelCase(String snakeCaseString) {
-        final var parts = List.of(snakeCaseString.toLowerCase().split("_+"));
-        return parts.headOption().getOrElse("")
+        final var parts = List.of(snakeCaseString.toLowerCase().split("_+"))
+            .filter(s -> !s.isEmpty());
+        return parts
+            .headOption().getOrElse("")
             .concat(
                 parts.drop(1)
                     .map(s -> CharSeq.of(s).capitalize())
