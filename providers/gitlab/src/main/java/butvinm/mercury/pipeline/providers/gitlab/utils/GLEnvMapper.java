@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
+import io.vavr.collection.CharSeq;
 import io.vavr.collection.List;
 import io.vavr.collection.Map;
 import io.vavr.control.Try;
@@ -100,26 +101,13 @@ public class GLEnvMapper {
      * @return Field name in camelCase.
      */
     private String toCamelCase(String snakeCaseString) {
-        var builder = new StringBuilder();
-
-        // Trim leading underscores
-        snakeCaseString = snakeCaseString.replaceFirst("^_+", "");
-
-        var chars = snakeCaseString.toCharArray();
-        Boolean capitalizeNext = false;
-        for (char c : chars) {
-            if (c == '_') {
-                capitalizeNext = true;
-            } else {
-                if (capitalizeNext) {
-                    builder.append(Character.toUpperCase(c));
-                    capitalizeNext = false;
-                } else {
-                    builder.append(Character.toLowerCase(c));
-                }
-            }
-        }
-        return builder.toString();
+        final var parts = List.of(snakeCaseString.toLowerCase().split("_+"));
+        return parts.headOption().getOrElse("")
+            .concat(
+                parts.drop(1)
+                    .map(s -> CharSeq.of(s).capitalize())
+                    .mkString()
+            );
     }
 
     /**
