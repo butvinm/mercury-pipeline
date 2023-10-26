@@ -1,6 +1,6 @@
 package butvinm.mercury.pipeline.core.plugins;
 
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.events.Event;
+import butvinm.mercury.pipeline.core.events.Event;
 
 /**
  * Interface of pipeline plugin.
