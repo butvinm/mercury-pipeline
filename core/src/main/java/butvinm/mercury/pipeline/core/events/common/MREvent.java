@@ -45,7 +45,7 @@ public class MREvent implements Event {
      * merge_train.
      */
     @NonNull
-    private final String eventType;
+    private final MREventType eventType;
 
     /**
      * Approval status of the merge request. True when merge request approvals
