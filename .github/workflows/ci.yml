@@ -18,7 +18,11 @@ jobs:
                   distribution: "temurin"
                   cache: maven
             - name: Run tests
-              run: mvn -B clean test --file pom.xml
+              run: mvn -B clean test \
+                --file pom.xml \
+                -D integrationTests=true \
+                -D ytapi.token=${{ secrets.YT_API_TEST_TOKEN }}
+                -D ytapi.orgId=${{ secrets.YT_API_TEST_ORGID }}
 
     lint:
         runs-on: ubuntu-latest
