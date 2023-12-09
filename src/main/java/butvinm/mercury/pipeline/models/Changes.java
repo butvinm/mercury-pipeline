@@ -15,6 +15,9 @@ public class Changes {
     @JsonProperty("reviewers")
     private final Reviewers reviewers;
 
+    @JsonProperty("labels")
+    private final Labels labels;
+
     @Data
     @Jacksonized
     @Builder
@@ -24,5 +27,16 @@ public class Changes {
 
         @JsonProperty("current")
         private final List<User> current;
+    }
+
+    @Data
+    @Jacksonized
+    @Builder
+    public static class Labels {
+        @JsonProperty("previous")
+        private final List<Label> previous;
+
+        @JsonProperty("current")
+        private final List<Label> current;
     }
 }
