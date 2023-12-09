@@ -3,11 +3,9 @@ package butvinm.mercury.pipeline.models;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.extern.jackson.Jacksonized;
 
 @Data
@@ -121,24 +119,4 @@ public class ObjectAttributes {
 
     @JsonProperty("detailed_merge_status")
     private final String detailedMergeStatus;
-
-    public enum Action {
-        OPEN("open"),
-        CLOSE("close"),
-        REOPEN("reopen"),
-        UPDATE("update"),
-        APPROVED("approved"),
-        UNAPPROVED("unapproved"),
-        APPROVAL("approval"),
-        UNAPPROVAL("unapproval"),
-        MERGE("merge");
-
-        @Getter
-        @JsonValue
-        private final String label;
-
-        private Action(String label) {
-            this.label = label;
-        }
-    }
 }
