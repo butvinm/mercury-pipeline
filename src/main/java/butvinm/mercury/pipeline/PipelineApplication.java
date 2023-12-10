@@ -1,10 +1,12 @@
 package butvinm.mercury.pipeline;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Optional;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.regex.Pattern;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,6 +26,29 @@ public class PipelineApplication {
         System.getenv("YT_ORG_ID")
     );
 
+    private final EventHandler handler = initHandler();
+
+    private AppConfig config;
+
+    private AppConfig loadConfig() {
+        try {
+            return AppConfig.fromYaml(new File("./config.yml"));
+        } catch (IOException err) {
+            throw new RuntimeException(err);
+        }
+    }
+
+    private EventHandler initHandler() {
+        var handler = new EventHandler();
+        handler
+            .when(EventFilter.of().reviewerAssigned())
+            .run(this::handleReviewerAssignment);
+        handler
+            .when(EventFilter.of().labeled("rejected"))
+            .run(this::handleMrRejection);
+        return handler;
+    }
+
     public static void main(String[] args) {
         SpringApplication.run(PipelineApplication.class, args);
     }
@@ -32,51 +57,26 @@ public class PipelineApplication {
     public String mergeRequestHandler(
         @RequestBody MREvent event
     ) {
+        config = loadConfig();
         logger.info(event.toString());
+        return String.join("\n", handler.handle(event));
+    }
 
-        logger.info("Action: " + event.getObjectAttributes().getAction());
-        var action = event.getObjectAttributes().getAction();
-        if (action == null) {
-            logger.info("Unknown action");
-            return "Unknown action";
-        }
+    private String handleReviewerAssignment(MREvent event) {
         var issueId = getIssueId(event);
-        switch (action) {
-        case APPROVED:
-            logger.info("-- (approved)");
-            return "No Action (approved)";
-        case CLOSE:
-            logger.info("-- (closed)");
-            return "No Action (closed)";
-        case MERGE:
-            logger.info("-- (merged)");
-            return "No Action (merged)";
-            // return yt.transitIssueStatus(issueId, "close").getBody();
-        case UPDATE:
-            var changes = event.getChanges();
-            if (changes.getReviewers() != null) {
-                var prevReviewers = event.getChanges().getReviewers()
-                    .getPrevious();
-                var currReviewers = event.getChanges().getReviewers()
-                    .getCurrent();
-                if (currReviewers.size() > prevReviewers.size()) {
-                    logger.info("-> review");
-                    return yt.transitIssueStatus(issueId, "in_review").getBody();
-                }
-            }
-            if (changes.getLabels() != null) {
-                var currLabels = event.getChanges().getLabels().getCurrent();
-                if (currLabels.stream()
-                    .anyMatch(l -> l.getTitle().equals("rejected"))) {
-                    logger.info("-> rejected");
-                    return yt.transitIssueStatus(issueId, "need_info")
-                        .getBody();
-                }
-            }
-            default:
-            break;
+        if (issueId.isPresent()) {
+            return yt.transitIssueStatus(issueId.get(), "in_review")
+                .getBody();
         }
-        return event.toString();
+        return "Bad Issue Id";
+    }
+
+    private String handleMrRejection(MREvent event) {
+        var issueId = getIssueId(event);
+        if (issueId.isPresent()) {
+            return yt.transitIssueStatus(issueId.get(), "need_info").getBody();
+        }
+        return "Bad Issue Id";
     }
 
     private Logger initLogger() {
@@ -92,12 +92,12 @@ public class PipelineApplication {
         }
     }
 
-    private String getIssueId(MREvent event) {
-        var mrTitle = event.getObjectAttributes().getTitle();
-        var parts = mrTitle.split("-");
-        if (parts.length < 2) {
-            return null;
+    private Optional<String> getIssueId(MREvent event) {
+        var pattern = Pattern.compile(config.getMrNamePattern());
+        var matcher = pattern.matcher(event.getObjectAttributes().getTitle());
+        if (matcher.find()) {
+            return Optional.of(matcher.group("issueId"));
         }
-        return String.join("-", Arrays.copyOfRange(parts, 1, parts.length));
+        return Optional.empty();
     }
 }
