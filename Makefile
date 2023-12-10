@@ -15,11 +15,13 @@ $(JAR): $(SOURCES)
 deploy: $(JAR)
 	scp $(JAR) $(SERVER_SSH):~/target
 	scp Dockerfile $(SERVER_SSH):~
+	scp .env $(SERVER_SSH):~
 	ssh $(SERVER_SSH) "docker ps -a -q | xargs -r docker stop || true"
 	ssh $(SERVER_SSH) "docker ps -a -q | xargs -r docker kill || true"
+	ssh $(SERVER_SSH) "docker ps -a -q | xargs -r docker rm || true"
 	ssh $(SERVER_SSH) "docker build -t pipeline ."
-	ssh $(SERVER_SSH) "docker run -p 8080:8080 pipeline </dev/null >/var/log/root-backup.log 2>&1 &"
+	ssh $(SERVER_SSH) "docker run --env-file .env -v ./cnt-tmp:/tmp/logs -d -p 8080:8080 pipeline"
 
 dev: $(JAR)
 	docker build -t mercury.pipeline .
-	docker run -p 8080:8080 mercury.pipeline:latest
+	docker run --env-file .env -v ./cnt-tmp:/tmp/logs -p 8080:8080 mercury.pipeline:latest
