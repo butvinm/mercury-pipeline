@@ -25,5 +25,5 @@ deploy: $(JAR)
 	ssh $(SERVER_SSH) "docker run --env-file .env -v ./cnt-tmp:/tmp/logs -d -p $(BIND_PORT):8080 bot"
 
 dev: $(JAR)
-	docker build -t mercury.pipeline .
+	docker build -t mercury.bot .
 	docker run --env-file .env -v ./cnt-tmp:/tmp/logs -p $(BIND_PORT):8080 mercury.bot:latest

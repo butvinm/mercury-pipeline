@@ -35,4 +35,7 @@ public class ObjectAttributes {
 
     @JsonProperty("created_at")
     private final String createdAt;
+
+    @JsonProperty("finished_at")
+    private final String finishedAt;
 }

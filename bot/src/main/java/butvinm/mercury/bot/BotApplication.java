@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
+import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
+import com.pengrad.telegrambot.request.SendMessage;
+
 import butvinm.mercury.bot.models.PipelineEvent;
 import butvinm.mercury.bot.models.PipelineStatus;
 
@@ -18,6 +23,10 @@ import butvinm.mercury.bot.models.PipelineStatus;
 @RestController
 public class BotApplication {
     private final Logger logger = initLogger();
+
+    private final TelegramBot bot = initBot(System.getenv("BOT_TOKEN"));
+
+    private final String chatId = System.getenv("CHAT_ID");
 
     public static void main(String[] args) {
         SpringApplication.run(BotApplication.class, args);
@@ -36,7 +45,26 @@ public class BotApplication {
     }
 
     private String handleSuccessPipeline(PipelineEvent event) {
-        return "meow";
+        var projectId = event.getProject().getId();
+        var pipelineId = event.getObjectAttributes().getId();
+        var pipelineName = event.getObjectAttributes().getName();
+        var pipelineTime = event.getObjectAttributes().getFinishedAt();
+        var callbackData = "rebuild:%s:%s".formatted(projectId, pipelineId);
+        var text = "Pipeline \"%s\" finished successfully at %s"
+            .formatted(pipelineName, pipelineTime);
+
+        var keyboard = new InlineKeyboardMarkup(
+            new InlineKeyboardButton("Rebuild!").callbackData(callbackData)
+        );
+        SendMessage request = new SendMessage(chatId, text)
+            .replyMarkup(keyboard);
+
+        var response = bot.execute(request);
+        return response.toString();
+    }
+
+    private TelegramBot initBot(String token) {
+        return new TelegramBot(token);
     }
 
     private Logger initLogger() {
