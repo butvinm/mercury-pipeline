@@ -1,0 +1,1 @@
+mr_name_pattern: \w+-(?<issueId>[\w-]+)
