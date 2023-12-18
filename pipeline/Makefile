@@ -7,6 +7,8 @@ SERVER_USER ?=
 SERVER_IP ?=
 SERVER_SSH = "$(SERVER_USER)@$(SERVER_IP)"
 
+BIND_PORT = 4242
+
 all: dev
 
 $(JAR): $(SOURCES)
@@ -20,8 +22,8 @@ deploy: $(JAR)
 	ssh $(SERVER_SSH) "docker ps -a -q | xargs -r docker kill || true"
 	ssh $(SERVER_SSH) "docker ps -a -q | xargs -r docker rm || true"
 	ssh $(SERVER_SSH) "docker build -t pipeline ."
-	ssh $(SERVER_SSH) "docker run --env-file .env -v ./cnt-tmp:/tmp/logs -d -p 8080:8080 pipeline"
+	ssh $(SERVER_SSH) "docker run --env-file .env -v ./cnt-tmp:/tmp/logs -d -p $(BIND_PORT):8080 pipeline"
 
 dev: $(JAR)
 	docker build -t mercury.pipeline .
-	docker run --env-file .env -v ./cnt-tmp:/tmp/logs -p 8080:8080 mercury.pipeline:latest
+	docker run --env-file .env -v ./cnt-tmp:/tmp/logs -p $(BIND_PORT):8080 mercury.pipeline:latest
