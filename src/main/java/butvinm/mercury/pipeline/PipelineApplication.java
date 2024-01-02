@@ -14,40 +14,24 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
+import butvinm.mercury.pipeline.handler.EventHandler;
+import butvinm.mercury.pipeline.handler.EventHandlerConfig;
 import butvinm.mercury.pipeline.models.MREvent;
 
 @SpringBootApplication
 @RestController
 public class PipelineApplication {
     private final Logger logger = initLogger();
-
+    private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private final File configFile = new File("/config.yml");
     private final YTClient yt = new YTClient(
         System.getenv("YT_TOKEN"),
         System.getenv("YT_ORG_ID")
     );
-
-    private final EventHandler handler = initHandler();
-
-    private AppConfig config;
-
-    private AppConfig loadConfig() {
-        try {
-            return AppConfig.fromYaml(new File("./config.yml"));
-        } catch (IOException err) {
-            throw new RuntimeException(err);
-        }
-    }
-
-    private EventHandler initHandler() {
-        var handler = new EventHandler();
-        handler
-            .when(EventFilter.of().reviewerAssigned())
-            .run(this::handleReviewerAssignment);
-        handler
-            .when(EventFilter.of().labeled("rejected"))
-            .run(this::handleMrRejection);
-        return handler;
-    }
 
     public static void main(String[] args) {
         SpringApplication.run(PipelineApplication.class, args);
@@ -57,26 +41,24 @@ public class PipelineApplication {
     public String mergeRequestHandler(
         @RequestBody MREvent event
     ) {
-        config = loadConfig();
         logger.info(event.toString());
-        return String.join("\n", handler.handle(event));
+        try {
+            var executor = loadExecutor();
+            var result = executor.processEvent(event);
+            if (result.isEmpty()) {
+                return "Processing failed";
+            }
+            return result.get();
+        } catch (DatabindException e) {
+            return "Bad config file: %s".formatted(e.getMessage());
+        } catch (IOException e) {
+            return "Cannot read config file: %s".formatted(e.getMessage());
+        }
     }
 
-    private String handleReviewerAssignment(MREvent event) {
-        var issueId = getIssueId(event);
-        if (issueId.isPresent()) {
-            return yt.transitIssueStatus(issueId.get(), "in_review")
-                .getBody();
-        }
-        return "Bad Issue Id";
-    }
-
-    private String handleMrRejection(MREvent event) {
-        var issueId = getIssueId(event);
-        if (issueId.isPresent()) {
-            return yt.transitIssueStatus(issueId.get(), "need_info").getBody();
-        }
-        return "Bad Issue Id";
+    private EventHandler loadExecutor() throws IOException, DatabindException {
+        var config = mapper.readValue(configFile, EventHandlerConfig.class);
+        return EventHandler.fromConfig(yt, config);
     }
 
     private Logger initLogger() {
@@ -90,14 +72,5 @@ public class PipelineApplication {
         } catch (SecurityException | IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private Optional<String> getIssueId(MREvent event) {
-        var pattern = Pattern.compile(config.getMrNamePattern());
-        var matcher = pattern.matcher(event.getObjectAttributes().getTitle());
-        if (matcher.find()) {
-            return Optional.of(matcher.group("issueId"));
-        }
-        return Optional.empty();
     }
 }
