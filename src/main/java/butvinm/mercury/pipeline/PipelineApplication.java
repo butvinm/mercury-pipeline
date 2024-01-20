@@ -18,9 +18,11 @@ import butvinm.mercury.pipeline.exceptions.ShareDirMissedException;
 import butvinm.mercury.pipeline.handler.EventHandler;
 import butvinm.mercury.pipeline.handler.EventHandlerConfig;
 import butvinm.mercury.pipeline.models.MREvent;
+import lombok.extern.slf4j.Slf4j;
 
 @SpringBootApplication
 @RestController
+@Slf4j
 public class PipelineApplication {
     private final File shareDir;
 
@@ -55,16 +57,20 @@ public class PipelineApplication {
     public String mergeRequestHandler(
         @RequestBody MREvent event
     ) {
+        log.info("Event: {}", event);
         try {
             var executor = loadExecutor();
             var result = executor.processEvent(event);
+            log.info("Result: {}", result);
             if (result.isEmpty()) {
                 return "Processing failed";
             }
             return result.get();
         } catch (DatabindException e) {
+            log.error(e.getMessage());
             return "Bad config file: %s".formatted(e.getMessage());
         } catch (IOException e) {
+            log.error(e.getMessage());
             return "Cannot read config file: %s".formatted(e.getMessage());
         }
     }
