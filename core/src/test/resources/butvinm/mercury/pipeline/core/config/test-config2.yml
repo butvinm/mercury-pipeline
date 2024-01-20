@@ -1,0 +1,14 @@
+plugins:
+    - name: TestPluginConfig2
+      enabled: true
+      doubleValue: 3.14
+      integerSet:
+          - 1
+          - 2
+      nestedMap:
+          key1:
+              - value1
+              - value2
+          key2:
+              - value3
+              - value4

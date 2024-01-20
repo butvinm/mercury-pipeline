@@ -1,0 +1,10 @@
+plugins:
+    - name: TestPluginConfig1
+      property1: value1
+      property2: 42
+      stringList:
+          - item1
+          - item2
+      stringToIntMap:
+          key1: 1
+          key2: 2
