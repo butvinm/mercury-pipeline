@@ -1,0 +1,18 @@
+mr_name_pattern: \w+-(?<issueId>[\w-]+)
+
+transitions:
+  - when:
+      new_reviewer: true
+    status: in_review
+
+  - when:
+      new_label: rejected
+    status: need_info
+
+  - when:
+      del_label: rejected
+    status: in_review
+
+  - when:
+      mr_state: close
+    status: close
