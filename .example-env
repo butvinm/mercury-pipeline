@@ -1,2 +1,4 @@
 YT_TOKEN=
-YT_ORG_ID=
+YT_ORGID=
+SHARE=/share
+CONFIG=config.yml
