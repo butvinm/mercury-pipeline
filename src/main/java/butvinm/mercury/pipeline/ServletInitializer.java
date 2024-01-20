@@ -4,11 +4,13 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 public class ServletInitializer extends SpringBootServletInitializer {
-	@Override
+    @Override
     protected SpringApplicationBuilder configure(
-        SpringApplicationBuilder application) {
+        SpringApplicationBuilder application
+    ) {
         return application.sources(PipelineApplication.class);
     }
 
-    public void main() {}
+    public void main() {
+    }
 }

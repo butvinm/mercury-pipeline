@@ -2,12 +2,9 @@ package butvinm.mercury.pipeline;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import java.util.regex.Pattern;
+import java.nio.file.Path;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.DatabindException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import butvinm.mercury.pipeline.exceptions.ConfigFileMissedException;
+import butvinm.mercury.pipeline.exceptions.ShareDirMissedException;
 import butvinm.mercury.pipeline.handler.EventHandler;
 import butvinm.mercury.pipeline.handler.EventHandlerConfig;
 import butvinm.mercury.pipeline.models.MREvent;
@@ -25,23 +22,39 @@ import butvinm.mercury.pipeline.models.MREvent;
 @SpringBootApplication
 @RestController
 public class PipelineApplication {
-    private final Logger logger = initLogger();
-    private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    private final File configFile = new File("/config.yml");
-    private final YTClient yt = new YTClient(
-        System.getenv("YT_TOKEN"),
-        System.getenv("YT_ORG_ID")
-    );
+    private final File shareDir;
+
+    private final File configFile;
+
+    private final YTClient yt;
 
     public static void main(String[] args) {
         SpringApplication.run(PipelineApplication.class, args);
+    }
+
+    public PipelineApplication(
+        @Value("${share}") Path shareDir,
+        @Value("${config}") Path configFile,
+        @Value("${yt.token}") String ytToken,
+        @Value("${yt.orgId}") String ytOrgId
+    ) throws ShareDirMissedException, ConfigFileMissedException, IOException {
+        this.shareDir = shareDir.toFile();
+        if (!this.shareDir.exists()) {
+            throw new ShareDirMissedException(this.shareDir);
+        }
+
+        this.configFile = shareDir.resolve(configFile).toFile();
+        if (!this.configFile.exists()) {
+            throw new ConfigFileMissedException(this.configFile );
+        }
+
+        this.yt = initYtClient(ytToken, ytOrgId);
     }
 
     @PostMapping("/merge-requests")
     public String mergeRequestHandler(
         @RequestBody MREvent event
     ) {
-        logger.info(event.toString());
         try {
             var executor = loadExecutor();
             var result = executor.processEvent(event);
@@ -56,21 +69,11 @@ public class PipelineApplication {
         }
     }
 
-    private EventHandler loadExecutor() throws IOException, DatabindException {
-        var config = mapper.readValue(configFile, EventHandlerConfig.class);
-        return EventHandler.fromConfig(yt, config);
+    private YTClient initYtClient(String token, String orgId) {
+        return new YTClient(token, orgId);
     }
 
-    private Logger initLogger() {
-        var logger = Logger.getLogger("main");
-        try {
-            var fileHandler = new FileHandler("/tmp/logs/logs.log");
-            logger.addHandler(fileHandler);
-            var formatter = new SimpleFormatter();
-            fileHandler.setFormatter(formatter);
-            return logger;
-        } catch (SecurityException | IOException e) {
-            throw new RuntimeException(e);
-        }
+    private EventHandler loadExecutor() throws IOException, DatabindException {
+        return EventHandler.fromConfig(yt, EventHandlerConfig.read(configFile));
     }
 }
