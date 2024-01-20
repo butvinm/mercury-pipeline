@@ -32,9 +32,15 @@ public class EventHandler {
         var resultBuilder = new StringBuilder();
         for (var transition : this.transitions) {
             if (transition.getFilter().test(event)) {
-                yt.transitIssueStatus(issueId.get(), transition.getStatus());
-                resultBuilder.append("Transit issue %s to %s\n"
-                    .formatted(issueId.get(), transition.getStatus()));
+                var response = yt.transitIssueStatus(
+                    issueId.get(),
+                    transition.getStatus()
+                );
+                resultBuilder.append("Transit issue %s to %s: \n".formatted(
+                    issueId.get(),
+                    transition.getStatus(),
+                    response.getBody()
+                ));
             }
         }
         return Optional.of(resultBuilder.toString());
