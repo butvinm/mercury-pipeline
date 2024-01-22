@@ -112,9 +112,9 @@ If your project has specific requirements that go beyond the default behavior, y
 It's time to start, because you can define custom executors exactly as you do it in the YAML config file:
 
 ```java
-private Executor customExecutor() throws DefinitionException {
+private Executor customExecutor(ExecutorConfig config) throws DefinitionException {
     return Executor.definition(yt)
-    .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
+    .mrNamePattern(config.getMrNamePattern().pattern())
     .transitions()
         .when()
             .newReviewer()
@@ -128,6 +128,14 @@ private Executor customExecutor() throws DefinitionException {
         .when()
             .delLabel("rejected")
         .status("in_work")
+    .triggers()
+        .when()
+            .newReviewer()
+        .status(this::notifyReviewer)
     .define();
 }
 ```
+
+As you can mention, there are also `triggers` section, that works like `transitions`, but allows you run any function on event.
+
+> btw, we have common boring builders as well (`Executor.builder()`, `Trigger.builder()`, `Transaction.builder()`, `Filter.builder()`). But why do you need them?

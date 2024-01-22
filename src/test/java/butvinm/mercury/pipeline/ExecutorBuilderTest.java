@@ -2,6 +2,7 @@ package butvinm.mercury.pipeline;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
@@ -12,10 +13,19 @@ import butvinm.mercury.pipeline.executor.definition.exceptions.DefinitionExcepti
 import butvinm.mercury.pipeline.executor.definition.exceptions.InvalidSpecException;
 import butvinm.mercury.pipeline.executor.filter.Filter;
 import butvinm.mercury.pipeline.executor.transition.Transition;
+import butvinm.mercury.pipeline.executor.trigger.Trigger;
+import butvinm.mercury.pipeline.models.MREvent;
 import butvinm.mercury.pipeline.models.MRState;
 
 public class ExecutorBuilderTest {
     private static final YTClient yt = new YTClient("test", "test");
+
+    private Function<MREvent, String> dummyAction = new Function<>() {
+        @Override
+        public String apply(MREvent event) {
+            return event.toString();
+        }
+    };
 
     private void assertExecutorsEquals(Executor expected, Executor actual) {
         assertEquals(
@@ -25,6 +35,10 @@ public class ExecutorBuilderTest {
         assertEquals(
             expected.getTransitions(),
             actual.getTransitions()
+        );
+        assertEquals(
+            expected.getTriggers(),
+            actual.getTriggers()
         );
     }
 
@@ -45,6 +59,19 @@ public class ExecutorBuilderTest {
             .when()
                 .delLabel("rejected")
             .status("in_work")
+        .triggers()
+            .when()
+                .newReviewer()
+            .action(dummyAction)
+
+            .when()
+                .newLabel("rejected")
+                .mrState(MRState.CLOSE)
+            .action(dummyAction)
+
+            .when()
+                .delLabel("rejected")
+            .action(dummyAction)
         .define();
 
         var expected = Executor.builder()
@@ -81,43 +108,78 @@ public class ExecutorBuilderTest {
                     .status("in_work")
                     .build()
             )
+            .trigger(
+                Trigger.builder()
+                    .filter(
+                        Filter.builder()
+                            .newReviewer()
+                            .build()
+                    )
+                    .action(dummyAction)
+                    .build()
+            )
+            .trigger(
+                Trigger.builder()
+                    .filter(
+                        Filter.builder()
+                            .newLabel("rejected")
+                            .mrState(MRState.CLOSE)
+                            .build()
+                    )
+                    .action(dummyAction)
+                    .build()
+            )
+            .trigger(
+                Trigger.builder()
+                    .filter(
+                        Filter.builder()
+                            .delLabel("rejected")
+                            .build()
+                    )
+                    .action(dummyAction)
+                    .build()
+            )
             .build();
 
         assertExecutorsEquals(expected, actual);
     }
 
     @Test
-    public void testEmpty() {
-        assertThrows(NullPointerException.class, new ExecutorDefinition(yt)::define);
-    }
-
-    @Test
-    public void testSkipMRNamePattern() throws DefinitionException {
-        var builder = new ExecutorDefinition(yt)
-        .transitions()
-            .when()
-                .newReviewer()
-            .status("in_review")
-
-            .when()
-                .newLabel("approved")
-            .status("approved");
-
-        assertThrows(NullPointerException.class, builder::define);
-    }
-
-    @Test
-    public void testSkipTransitions() throws DefinitionException {
-        var actual = new ExecutorDefinition(yt)
-        .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
-        .define();
-
-        var expected = Executor.builder()
-            .yt(yt)
-            .mrNamePattern(Pattern.compile("\\w+-(?<issueId>[\\w-]+)"))
-            .build();
-
-        assertExecutorsEquals(expected, actual);
+    public void testMissedFields() throws DefinitionException {
+        assertThrows(
+            InvalidSpecException.class,
+            () -> new ExecutorDefinition(yt).define()
+        );
+        assertThrows(
+            InvalidSpecException.class,
+            () -> {
+                new ExecutorDefinition(yt)
+                .transitions()
+                    .when()
+                        .newReviewer()
+                    .status("in_review")
+                .define();
+            }
+        );
+        assertThrows(
+            InvalidSpecException.class,
+            () -> {
+                new ExecutorDefinition(yt)
+                .triggers()
+                    .when()
+                        .newReviewer()
+                    .action(dummyAction)
+                .define();
+            }
+        );
+        assertThrows(
+            InvalidSpecException.class,
+            () -> {
+                new ExecutorDefinition(yt)
+                .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
+                .define();
+            }
+        );
     }
 
     @Test
@@ -137,9 +199,18 @@ public class ExecutorBuilderTest {
             () -> {
                 new ExecutorDefinition(yt)
                 .transitions()
-                    .when()
                 .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
                 .transitions()
+                .define();
+            }
+        );
+        assertThrows(
+            InvalidSpecException.class,
+            () -> {
+                new ExecutorDefinition(yt)
+                .triggers()
+                .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
+                .triggers()
                 .define();
             }
         );

@@ -1,13 +1,14 @@
 package butvinm.mercury.pipeline.executor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import butvinm.mercury.pipeline.YTClient;
 import butvinm.mercury.pipeline.executor.definition.ExecutorDefinition;
 import butvinm.mercury.pipeline.executor.transition.Transition;
+import butvinm.mercury.pipeline.executor.trigger.Trigger;
 import butvinm.mercury.pipeline.models.MREvent;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +30,10 @@ public class Executor {
     @Singular
     private final List<Transition> transitions;
 
+    @NonNull
+    @Singular
+    private final List<Trigger> triggers;
+
     public static ExecutorDefinition definition(YTClient yt) {
         return new ExecutorDefinition(yt);
     }
@@ -40,7 +45,12 @@ public class Executor {
         var transitions = config.getTransitions().stream()
             .map(Transition::fromConfig)
             .toList();
-        return new Executor(yt, config.getMrNamePattern(), transitions);
+        return new Executor(
+            yt,
+            config.getMrNamePattern(),
+            transitions,
+            new ArrayList<>()
+        );
     }
 
     public String processEvent(MREvent event) {
@@ -58,6 +68,14 @@ public class Executor {
                 digest.append(transitionResult.get()).append("\n");
             }
         }
+
+        for (var trigger : triggers) {
+            var triggerResult = trigger.run(event);
+            if (triggerResult.isPresent()) {
+                digest.append(triggerResult.get()).append("\n");
+            }
+        }
+
         return digest.toString();
     }
 

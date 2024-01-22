@@ -61,6 +61,11 @@ public class Filter implements Predicate<MREvent> {
             return this;
         }
 
+        public FilterBuilder test(Predicate<MREvent> predicate) {
+            this.predicates.add(predicate);
+            return this;
+        }
+
         public Filter build() {
             return new Filter(predicates);
         }

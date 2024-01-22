@@ -9,17 +9,17 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-class TransitionFSM {
+class TriggerFSM {
     private boolean whenVisited = false;
 
     private boolean whenEntered = false;
 
-    private boolean statusVisited = false;
+    private boolean actionVisited = false;
 
     public void reset() {
         whenVisited = false;
         whenEntered = false;
-        statusVisited = false;
+        actionVisited = false;
     }
 
     public void enterWhen() throws DefinitionException {
@@ -37,20 +37,20 @@ class TransitionFSM {
         whenEntered = false;
     }
 
-    public void visitStatus() throws DefinitionException {
-        if (statusVisited) {
+    public void visitAction() throws DefinitionException {
+        if (actionVisited) {
             throw new DefinitionException(
-                "`status` visited twice without reset."
+                "`action` visited twice without reset."
             );
         }
-        statusVisited = true;
+        actionVisited = true;
     }
 
     public boolean isComplete() {
-        return whenVisited && statusVisited;
+        return whenVisited && actionVisited;
     }
 
     public boolean isClean() {
-        return !whenVisited && !statusVisited;
+        return !whenVisited && !actionVisited;
     }
 }

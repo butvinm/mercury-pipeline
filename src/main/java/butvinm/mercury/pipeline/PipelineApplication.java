@@ -62,46 +62,46 @@ public class PipelineApplication {
 
         var digest = new StringBuilder();
 
-        // basic executor defined in config.yml
-        digest.append("Basic executor: ");
+        ExecutorConfig config;
         try {
-            log.info("Start basic executor");
-
-            var executor = loadExecutor();
-            var result = executor.processEvent(event);
-
-            log.info("Result: {}", result);
-            digest.append(result);
+            config = ExecutorConfig.read(configFile);
         } catch (DatabindException e) {
             log.error(e.getMessage());
             digest
                 .append("Bad config file: ")
                 .append(e.getMessage());
+            return digest.toString();
         } catch (IOException e) {
             log.error(e.getMessage());
             digest
                 .append("Cannot read config file: ")
                 .append(e.getMessage());
+            return digest.toString();
         }
-        digest.append("\n");
 
         // basic executor defined in config.yml
+        log.info("Start basic executor");
+        digest.append("Basic executor: ");
+        Executor executor = Executor.fromConfig(yt, config);
+        String result = executor.processEvent(event);
+        log.info("Result: {}", result);
+        digest.append(result).append("\n");
+
+        // custom executor
+        log.info("Start custom executor");
         digest.append("Custom executor: ");
         try {
-            log.info("Start custom executor");
-
-            var executor = customExecutor();
-            var result = executor.processEvent(event);
-
-            log.info("Result: {}", result);
-            digest.append(result);
+            executor = customExecutor(config);
         } catch (DefinitionException e) {
             log.error(e.getMessage());
             digest
-                .append("Bad executor definition. Verify customExecutor() function.")
+                .append("Bad executor definition.")
                 .append(e.getMessage());
+            return digest.toString();
         }
-        digest.append("\n");
+        result = executor.processEvent(event);
+        log.info("Result: {}", result);
+        digest.append(result).append("\n");
 
         return digest.toString();
     }
@@ -110,11 +110,14 @@ public class PipelineApplication {
         return new YTClient(token, orgId);
     }
 
-    private Executor loadExecutor() throws IOException, DatabindException {
-        return Executor.fromConfig(yt, ExecutorConfig.read(configFile));
-    }
-
-    private Executor customExecutor() throws DefinitionException {
-        return Executor.definition(yt).define();
+    private Executor customExecutor(ExecutorConfig config)
+        throws DefinitionException {
+        return Executor.definition(yt)
+        .mrNamePattern(config.getMrNamePattern().pattern())
+        .triggers()
+            .when()
+                .test(e -> true)
+            .action(e -> "Hello from custom executor!")
+        .define();
     }
 }
