@@ -1,8 +1,8 @@
-package butvinm.mercury.pipeline.handler;
+package butvinm.mercury.pipeline.executor.filter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import butvinm.mercury.pipeline.models.Action;
+import butvinm.mercury.pipeline.models.MRState;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
@@ -22,5 +22,5 @@ public class FilterConfig {
     private final Boolean newReviewer = false;
 
     @JsonProperty("mr_state")
-    private final Action mrState;
+    private final MRState mrState;
 }
