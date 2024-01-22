@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import lombok.Getter;
 
-public enum Action {
+public enum MRState {
     OPEN("open"),
     CLOSE("close"),
     REOPEN("reopen"),
@@ -19,7 +19,7 @@ public enum Action {
     @JsonValue
     private final String label;
 
-    private Action(String label) {
+    private MRState(String label) {
         this.label = label;
     }
 }

@@ -105,8 +105,37 @@ Triggered when the merge request state changes.
 
 ## Write your own handlers
 
-TODO
+If your project has specific requirements that go beyond the default behavior, you can easily define custom handlers in the [`customExecutor()`](src/main/java/butvinm/mercury/pipeline/PipelineApplication.java) method. This allows you to tailor the execution of tasks based on your unique needs.
 
-<!-- If you need custom feature, you can modify codebase. Fortunately, we have some auxiliary for that.
+### Do you believe in magic?
 
-There are [EventHandler](src/main/java/butvinm/mercury/pipeline/handler/EventHandler.java) and [Filter](src/main/java/butvinm/mercury/pipeline/handler/Filter.java) classes, that you can use to easily attach actions to different pipelines events. -->
+It's time to start, because you can define custom executors exactly as you do it in the YAML config file:
+
+```java
+private Executor customExecutor(ExecutorConfig config) throws DefinitionException {
+    return Executor.definition(yt)
+    .mrNamePattern(config.getMrNamePattern().pattern())
+    .transitions()
+        .when()
+            .newReviewer()
+        .status("in_review")
+
+        .when()
+            .newLabel("rejected")
+            .mrState(MRState.CLOSE)
+        .status("need_info")
+
+        .when()
+            .delLabel("rejected")
+        .status("in_work")
+    .triggers()
+        .when()
+            .newReviewer()
+        .status(this::notifyReviewer)
+    .define();
+}
+```
+
+As you can mention, there are also `triggers` section, that works like `transitions`, but allows you run any function on event.
+
+> btw, we have common boring builders as well (`Executor.builder()`, `Trigger.builder()`, `Transaction.builder()`, `Filter.builder()`). But why do you need them?

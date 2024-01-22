@@ -11,7 +11,7 @@ import lombok.extern.jackson.Jacksonized;
 @Data
 @Jacksonized
 @Builder
-public class ObjectAttributes {
+public class Attributes {
     @JsonProperty("id")
     private final int id;
 
@@ -115,7 +115,7 @@ public class ObjectAttributes {
     private final List<Label> labels;
 
     @JsonProperty("action")
-    private final Action action;
+    private final MRState action;
 
     @JsonProperty("detailed_merge_status")
     private final String detailedMergeStatus;

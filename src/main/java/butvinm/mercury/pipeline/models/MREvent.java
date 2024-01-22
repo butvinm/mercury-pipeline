@@ -31,7 +31,7 @@ public class MREvent {
     private final Repository repository;
 
     @JsonProperty("object_attributes")
-    private final ObjectAttributes objectAttributes;
+    private final Attributes attributes;
 
     @JsonProperty("labels")
     private final List<Label> labels;

@@ -1,7 +1,8 @@
-package butvinm.mercury.pipeline.handler;
+package butvinm.mercury.pipeline.executor.transition;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import butvinm.mercury.pipeline.executor.filter.FilterConfig;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;

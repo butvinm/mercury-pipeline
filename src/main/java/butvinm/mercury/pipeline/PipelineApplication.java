@@ -15,8 +15,9 @@ import com.fasterxml.jackson.databind.DatabindException;
 
 import butvinm.mercury.pipeline.exceptions.ConfigFileMissedException;
 import butvinm.mercury.pipeline.exceptions.ShareDirMissedException;
-import butvinm.mercury.pipeline.handler.EventHandler;
-import butvinm.mercury.pipeline.handler.EventHandlerConfig;
+import butvinm.mercury.pipeline.executor.Executor;
+import butvinm.mercury.pipeline.executor.ExecutorConfig;
+import butvinm.mercury.pipeline.executor.definition.exceptions.DefinitionException;
 import butvinm.mercury.pipeline.models.MREvent;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +48,7 @@ public class PipelineApplication {
 
         this.configFile = shareDir.resolve(configFile).toFile();
         if (!this.configFile.exists()) {
-            throw new ConfigFileMissedException(this.configFile );
+            throw new ConfigFileMissedException(this.configFile);
         }
 
         this.yt = initYtClient(ytToken, ytOrgId);
@@ -58,28 +59,65 @@ public class PipelineApplication {
         @RequestBody MREvent event
     ) {
         log.info("Event: {}", event);
+
+        var digest = new StringBuilder();
+
+        ExecutorConfig config;
         try {
-            var executor = loadExecutor();
-            var result = executor.processEvent(event);
-            log.info("Result: {}", result);
-            if (result.isEmpty()) {
-                return "Processing failed";
-            }
-            return result.get();
+            config = ExecutorConfig.read(configFile);
         } catch (DatabindException e) {
             log.error(e.getMessage());
-            return "Bad config file: %s".formatted(e.getMessage());
+            digest
+                .append("Bad config file: ")
+                .append(e.getMessage());
+            return digest.toString();
         } catch (IOException e) {
             log.error(e.getMessage());
-            return "Cannot read config file: %s".formatted(e.getMessage());
+            digest
+                .append("Cannot read config file: ")
+                .append(e.getMessage());
+            return digest.toString();
         }
+
+        // basic executor defined in config.yml
+        log.info("Start basic executor");
+        digest.append("Basic executor: ");
+        Executor executor = Executor.fromConfig(yt, config);
+        String result = executor.processEvent(event);
+        log.info("Result: {}", result);
+        digest.append(result).append("\n");
+
+        // custom executor
+        log.info("Start custom executor");
+        digest.append("Custom executor: ");
+        try {
+            executor = customExecutor(config);
+        } catch (DefinitionException e) {
+            log.error(e.getMessage());
+            digest
+                .append("Bad executor definition.")
+                .append(e.getMessage());
+            return digest.toString();
+        }
+        result = executor.processEvent(event);
+        log.info("Result: {}", result);
+        digest.append(result).append("\n");
+
+        return digest.toString();
     }
 
     private YTClient initYtClient(String token, String orgId) {
         return new YTClient(token, orgId);
     }
 
-    private EventHandler loadExecutor() throws IOException, DatabindException {
-        return EventHandler.fromConfig(yt, EventHandlerConfig.read(configFile));
+    private Executor customExecutor(ExecutorConfig config)
+        throws DefinitionException {
+        return Executor.definition(yt)
+        .mrNamePattern(config.getMrNamePattern().pattern())
+        .triggers()
+            .when()
+                .test(e -> true)
+            .action(e -> "Hello from custom executor!")
+        .define();
     }
 }
