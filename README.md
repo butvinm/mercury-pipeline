@@ -74,34 +74,40 @@ Basic structure:
 ```yaml
 transitions:
   - when:
-      - filter 1
-      - filter 2
-    status: transition name
+      new_reviewer: true
+    status: in_review
 
   - when:
-      - filter 3
-      - filter 4
-    status: transition name
+      new_label: rejected
+    status: close
+    resolution: later
 ```
 
-### Available filters
+#### `when`
 
-#### `new_review`: boolean
+> `new_review`: boolean
+>
+> Triggered when a new reviewer is assigned.
 
-Triggered when a new reviewer is assigned.
+> `new_label`: string
+>
+> Triggered when a label with the specified name is assigned.
 
-#### `new_label`: string
+> `del_label`: string
+>
+> Triggered when a label with the specified name is removed from the merge request.
 
-Triggered when a label with the specified name is assigned.
+> `mr_state`: "open", "close", "reopen", "update", "approved", "unapproved", "approval", "unapproval", "merge"
+>
+> Triggered when the merge request state changes.
 
-#### `del_label`: string
+#### `state`
 
-Triggered when a label with the specified name is removed from the merge request.
+Actually, transition, that would be applied for an issue.
 
-#### `mr_state`: "open", "close", "reopen", "update", "approved", "unapproved", "approval", "unapproval", "merge"
+#### `resolution`: "fixed", "wontFix", "cantReproduce", "duplicate", "later"
 
-Triggered when the merge request state changes.
-
+Resolution for such transitions as "close". Default "fixed".
 
 ## Write your own handlers
 
@@ -127,7 +133,8 @@ private Executor customExecutor(ExecutorConfig config) throws DefinitionExceptio
 
         .when()
             .delLabel("rejected")
-        .status("in_work")
+        .status("close")
+        .resolution(Resolution.LATER)
     .triggers()
         .when()
             .newReviewer()

@@ -1,5 +1,8 @@
-package butvinm.mercury.pipeline;
+package butvinm.mercury.pipeline.yt;
 
+import java.util.Map;
+
+import butvinm.mercury.pipeline.yt.models.Resolution;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
 import kong.unirest.core.UnirestInstance;
@@ -22,16 +25,21 @@ public class YTClient {
         val unirest = Unirest.primaryInstance();
         unirest.config().defaultBaseUrl(YTClient.baseUrl)
             .addDefaultHeader("Authorization", "OAuth %s".formatted(token))
-            .addDefaultHeader("X-Cloud-Org-Id", orgId);
+            .addDefaultHeader("X-Cloud-Org-Id", orgId)
+            .addDefaultCookie("Accept", "application/json");
         return unirest;
     }
 
-    public HttpResponse<String> transitIssueStatus(String issueId,
-        String transitionId) {
+    public HttpResponse<String> transitIssueStatus(
+        String issueId,
+        String transitionId,
+        Resolution resolution
+    ) {
         return unirest
             .post("/v2/issues/{issues-id}/transitions/{transition-id}/_execute")
             .routeParam("issues-id", issueId)
             .routeParam("transition-id", transitionId)
+            .body(Map.of("resolution", resolution.getLabel()))
             .asString();
     }
 

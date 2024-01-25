@@ -16,10 +16,13 @@ class TransitionFSM {
 
     private boolean statusVisited = false;
 
+    private boolean resolutionVisited = false;
+
     public void reset() {
         whenVisited = false;
         whenEntered = false;
         statusVisited = false;
+        resolutionVisited = false;
     }
 
     public void enterWhen() throws DefinitionException {
@@ -39,11 +42,20 @@ class TransitionFSM {
 
     public void visitStatus() throws DefinitionException {
         if (statusVisited) {
-            throw new DefinitionException(
+            throw new InvalidSpecException(
                 "`status` visited twice without reset."
             );
         }
         statusVisited = true;
+    }
+
+    public void visitResolution() throws DefinitionException {
+        if (resolutionVisited) {
+            throw new InvalidSpecException(
+                "`resolution` visited twice without reset."
+            );
+        }
+        resolutionVisited = true;
     }
 
     public boolean isComplete() {

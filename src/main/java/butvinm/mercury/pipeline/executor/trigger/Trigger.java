@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import butvinm.mercury.pipeline.executor.filter.Filter;
-import butvinm.mercury.pipeline.models.MREvent;
+import butvinm.mercury.pipeline.gitlab.models.MREvent;
 import lombok.Builder;
 import lombok.Data;
 

@@ -2,9 +2,10 @@ package butvinm.mercury.pipeline.executor.transition;
 
 import java.util.Optional;
 
-import butvinm.mercury.pipeline.YTClient;
 import butvinm.mercury.pipeline.executor.filter.Filter;
-import butvinm.mercury.pipeline.models.MREvent;
+import butvinm.mercury.pipeline.gitlab.models.MREvent;
+import butvinm.mercury.pipeline.yt.YTClient;
+import butvinm.mercury.pipeline.yt.models.Resolution;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,10 +16,14 @@ public class Transition {
 
     private final String status;
 
+    @Builder.Default
+    private final Resolution resolution = Resolution.FIXED;
+
     public static Transition fromConfig(TransitionConfig config) {
         return new Transition(
             Filter.fromConfig(config.getFilter()),
-            config.getStatus()
+            config.getStatus(),
+            config.getResolution()
         );
     }
 
@@ -30,8 +35,8 @@ public class Transition {
         if (!filter.test(event)) {
             return Optional.empty();
         }
-        var response = yt.transitIssueStatus(issueId, status);
-        var result = "Transit issue %s to %s: \n".formatted(
+        var response = yt.transitIssueStatus(issueId, status, resolution);
+        var result = "Transit issue %s to %s: %s\n".formatted(
             issueId,
             status,
             response.getBody()

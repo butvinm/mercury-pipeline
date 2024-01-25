@@ -2,7 +2,7 @@ package butvinm.mercury.pipeline.executor.filter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import butvinm.mercury.pipeline.models.MRState;
+import butvinm.mercury.pipeline.gitlab.models.MRState;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;

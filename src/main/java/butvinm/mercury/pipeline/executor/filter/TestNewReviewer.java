@@ -2,7 +2,7 @@ package butvinm.mercury.pipeline.executor.filter;
 
 import java.util.function.Predicate;
 
-import butvinm.mercury.pipeline.models.MREvent;
+import butvinm.mercury.pipeline.gitlab.models.MREvent;
 import lombok.Data;
 
 @Data

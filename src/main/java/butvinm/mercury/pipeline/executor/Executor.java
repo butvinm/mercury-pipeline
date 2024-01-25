@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import butvinm.mercury.pipeline.YTClient;
 import butvinm.mercury.pipeline.executor.definition.ExecutorDefinition;
 import butvinm.mercury.pipeline.executor.transition.Transition;
 import butvinm.mercury.pipeline.executor.trigger.Trigger;
-import butvinm.mercury.pipeline.models.MREvent;
+import butvinm.mercury.pipeline.gitlab.models.MREvent;
+import butvinm.mercury.pipeline.yt.YTClient;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
