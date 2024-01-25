@@ -1,4 +1,4 @@
-package butvinm.mercury.pipeline.models;
+package butvinm.mercury.pipeline.gitlab.models;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
