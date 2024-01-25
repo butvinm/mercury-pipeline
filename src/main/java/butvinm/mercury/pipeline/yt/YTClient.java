@@ -1,7 +1,8 @@
-package butvinm.mercury.pipeline.yt.models;
+package butvinm.mercury.pipeline.yt;
 
 import java.util.Map;
 
+import butvinm.mercury.pipeline.yt.models.Resolution;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
 import kong.unirest.core.UnirestInstance;

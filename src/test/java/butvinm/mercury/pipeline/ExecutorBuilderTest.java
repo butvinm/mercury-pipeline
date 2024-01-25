@@ -14,13 +14,17 @@ import butvinm.mercury.pipeline.executor.definition.exceptions.InvalidSpecExcept
 import butvinm.mercury.pipeline.executor.filter.Filter;
 import butvinm.mercury.pipeline.executor.transition.Transition;
 import butvinm.mercury.pipeline.executor.trigger.Trigger;
-import butvinm.mercury.pipeline.models.MREvent;
-import butvinm.mercury.pipeline.models.MRState;
+import butvinm.mercury.pipeline.gitlab.models.MREvent;
+import butvinm.mercury.pipeline.gitlab.models.MRState;
+import butvinm.mercury.pipeline.yt.YTClient;
+import butvinm.mercury.pipeline.yt.models.Resolution;
 
 public class ExecutorBuilderTest {
     private static final YTClient yt = new YTClient("test", "test");
 
-    private Function<MREvent, String> dummyAction = new Function<>() {
+    private final String MR_NAME_PATTERN = "\\w+-(?<issueId>[\\w-]+)";
+
+    private final Function<MREvent, String> dummyAction = new Function<>() {
         @Override
         public String apply(MREvent event) {
             return event.toString();
@@ -45,7 +49,7 @@ public class ExecutorBuilderTest {
     @Test
     public void testFull() throws DefinitionException {
         var actual = new ExecutorDefinition(yt)
-        .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
+        .mrNamePattern(MR_NAME_PATTERN)
         .transitions()
             .when()
                 .newReviewer()
@@ -58,7 +62,8 @@ public class ExecutorBuilderTest {
 
             .when()
                 .delLabel("rejected")
-            .status("in_work")
+            .status("close")
+            .resolution(Resolution.LATER)
         .triggers()
             .when()
                 .newReviewer()
@@ -76,7 +81,7 @@ public class ExecutorBuilderTest {
 
         var expected = Executor.builder()
             .yt(yt)
-            .mrNamePattern(Pattern.compile("\\w+-(?<issueId>[\\w-]+)"))
+            .mrNamePattern(Pattern.compile(MR_NAME_PATTERN))
             .transition(
                 Transition.builder()
                     .filter(
@@ -105,7 +110,8 @@ public class ExecutorBuilderTest {
                             .delLabel("rejected")
                             .build()
                     )
-                    .status("in_work")
+                    .status("close")
+                    .resolution(Resolution.LATER)
                     .build()
             )
             .trigger(
@@ -176,7 +182,7 @@ public class ExecutorBuilderTest {
             InvalidSpecException.class,
             () -> {
                 new ExecutorDefinition(yt)
-                .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
+                .mrNamePattern(MR_NAME_PATTERN)
                 .define();
             }
         );
@@ -188,9 +194,22 @@ public class ExecutorBuilderTest {
             InvalidSpecException.class,
             () -> {
                 new ExecutorDefinition(yt)
-                .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
+                .mrNamePattern(MR_NAME_PATTERN)
                 .transitions()
-                .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
+                .mrNamePattern(MR_NAME_PATTERN)
+                .define();
+            }
+        );
+        assertThrows(
+            InvalidSpecException.class,
+            () -> {
+                new ExecutorDefinition(yt)
+                .mrNamePattern(MR_NAME_PATTERN)
+                .transitions()
+                    .when()
+                        .newReviewer()
+                    .resolution(Resolution.FIXED)
+                    .resolution(Resolution.LATER)
                 .define();
             }
         );
@@ -199,7 +218,7 @@ public class ExecutorBuilderTest {
             () -> {
                 new ExecutorDefinition(yt)
                 .transitions()
-                .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
+                .mrNamePattern(MR_NAME_PATTERN)
                 .transitions()
                 .define();
             }
@@ -209,7 +228,7 @@ public class ExecutorBuilderTest {
             () -> {
                 new ExecutorDefinition(yt)
                 .triggers()
-                .mrNamePattern("\\w+-(?<issueId>[\\w-]+)")
+                .mrNamePattern(MR_NAME_PATTERN)
                 .triggers()
                 .define();
             }

@@ -4,15 +4,16 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import butvinm.mercury.pipeline.YTClient;
 import butvinm.mercury.pipeline.executor.Executor;
 import butvinm.mercury.pipeline.executor.definition.exceptions.DefinitionException;
 import butvinm.mercury.pipeline.executor.definition.exceptions.InvalidSpecException;
 import butvinm.mercury.pipeline.executor.filter.Filter;
 import butvinm.mercury.pipeline.executor.transition.Transition;
 import butvinm.mercury.pipeline.executor.trigger.Trigger;
-import butvinm.mercury.pipeline.models.MREvent;
-import butvinm.mercury.pipeline.models.MRState;
+import butvinm.mercury.pipeline.gitlab.models.MREvent;
+import butvinm.mercury.pipeline.gitlab.models.MRState;
+import butvinm.mercury.pipeline.yt.YTClient;
+import butvinm.mercury.pipeline.yt.models.Resolution;
 import lombok.Data;
 
 @Data
@@ -142,7 +143,25 @@ public class ExecutorDefinition {
         }
         transition.status(status);
         transitionFsm.visitStatus();
-        transitionFsm.exitWhen();
+        if (transitionFsm.isWhenEntered()) {
+            transitionFsm.exitWhen();
+        }
+        return this;
+    }
+
+    public ExecutorDefinition resolution(Resolution resolution)
+        throws DefinitionException {
+        if (!executorFsm.isTransitionsEntered()) {
+            throw new InvalidSpecException("`resolution` outside of `transitions`");
+        }
+        if (transitionFsm.isComplete() && transitionFsm.isResolutionVisited()) {
+            tryBuildTransition();
+        }
+        transition.resolution(resolution);
+        transitionFsm.visitResolution();
+        if (transitionFsm.isWhenEntered()) {
+            transitionFsm.exitWhen();
+        }
         return this;
     }
 

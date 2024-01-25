@@ -16,3 +16,4 @@ transitions:
   - when:
       mr_state: close
     status: close
+    resolution: later

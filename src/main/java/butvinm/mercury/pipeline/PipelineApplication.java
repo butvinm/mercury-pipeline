@@ -18,7 +18,8 @@ import butvinm.mercury.pipeline.exceptions.ShareDirMissedException;
 import butvinm.mercury.pipeline.executor.Executor;
 import butvinm.mercury.pipeline.executor.ExecutorConfig;
 import butvinm.mercury.pipeline.executor.definition.exceptions.DefinitionException;
-import butvinm.mercury.pipeline.models.MREvent;
+import butvinm.mercury.pipeline.gitlab.models.MREvent;
+import butvinm.mercury.pipeline.yt.YTClient;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootApplication
