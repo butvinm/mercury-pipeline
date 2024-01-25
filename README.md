@@ -3,7 +3,6 @@ most object-oriented programmers work. - [TodePond](https://github.com/TodePond/
 
 # Mercury Pipeline
 
-
 Service that updates Yandex Tracker issues based on GitLab Merge Request events.
 
 ## Prerequisites
@@ -23,7 +22,7 @@ Before using Mercury Pipeline, make sure to:
 ### The Simplest Way
 
 1. Download the latest `app.jar` from the [latest release](https://github.com/butvinm/mercury-pipeline/releases/latest).
-2. Create a `share` directory and place the `config.yml` file in it. Refer to the [Config](#config) section for configuration details.
+2. Create a `share` directory and place the [config.yml](./share/config.yml) file in it. Refer to the [Config](#config) section for configuration details.
 3. Run the following command:
 ```bash
 java -jar app.jar \
@@ -35,12 +34,12 @@ java -jar app.jar \
 
 ### ~~For zoomers~~ In Docker
 
-1. Create a `.env` file and fill in the credentials:
+1. Create a `.env` (or just rename `.example-env`) file and fill in the credentials:
 ```dotenv
 YT_TOKEN="your-token"
 YT_ORGID="your-organization-id"
-SHARE=/share
-CONFIG=config.yml
+SHARE="/share"
+CONFIG="config.yml"
 ```
 
 2. Build the Docker image:
@@ -59,7 +58,7 @@ The [config.yml](./share/config.yml) file allows you to configure your pipeline 
 
 ### `mr_name_pattern`
 
-Specify the pattern to determine the Yandex Tracker issue ID related to a specific merge request.
+Pattern for extracting Yandex Tracker issue ID related to nerge request from its name.
 
 For example, if your merge requests are prefixed with an issue ID (e.g., "168 Add something essential"), set the following value:
 ```yaml
@@ -85,7 +84,7 @@ transitions:
 
 #### `when`
 
-> `new_review`: boolean
+> `new_reviewer`: boolean
 >
 > Triggered when a new reviewer is assigned.
 
@@ -113,10 +112,13 @@ Resolution for such transitions as "close". Default "fixed".
 
 If your project has specific requirements that go beyond the default behavior, you can easily define custom handlers in the [`customExecutor()`](src/main/java/butvinm/mercury/pipeline/PipelineApplication.java) method. This allows you to tailor the execution of tasks based on your unique needs.
 
-### Do you believe in magic?
+### Fancy builder
 
-It's time to start, because you can define custom executors exactly as you do it in the YAML config file:
+> If you're that *experienced java developer who has already seen enough of such things*, just skip to boring builder bellow.
 
+We provide a sophisticated builder that closely resembles a configuration file, simplifying the definition of a custom executor. This builder includes a triggers section, analogous to transitions, allowing you to execute custom functions on specific events.
+
+Example:
 ```java
 private Executor customExecutor(ExecutorConfig config) throws DefinitionException {
     return Executor.definition(yt)
@@ -138,11 +140,9 @@ private Executor customExecutor(ExecutorConfig config) throws DefinitionExceptio
     .triggers()
         .when()
             .newReviewer()
-        .status(this::notifyReviewer)
+        .action(this::notifyReviewer)
     .define();
 }
 ```
-
-As you can mention, there are also `triggers` section, that works like `transitions`, but allows you run any function on event.
 
 > btw, we have common boring builders as well (`Executor.builder()`, `Trigger.builder()`, `Transaction.builder()`, `Filter.builder()`). But why do you need them?
